@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Age &amp; Date Calculator — Free Online Tool | HiTend Digital</title>
+<meta name="description" content="Calculate your exact age in years, months, and days, or find the difference between any two dates — entirely in your browser.">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Age & Date Calculator — HiTend Digital">
+<meta property="og:description" content="Calculate exact age or the difference between two dates, instantly.">
+<meta property="og:url" content="https://hitenddigital.com/tools/age-calculator.html">
+
+<link rel="icon" href="../assets/logos/favicon.png">
+<link rel="stylesheet" href="../style.css">
+<style>
+  .type-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .type-tab {
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-size: var(--fs-small);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--text-dim);
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    cursor: pointer;
+    transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+  }
+  .type-tab.is-active {
+    color: var(--text);
+    background: linear-gradient(90deg, var(--brand), var(--red));
+    border-color: transparent;
+  }
+  .mode-panel.is-hidden { display: none; }
+
+  .date-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 560px) { .date-row { grid-template-columns: 1fr; } }
+
+  .date-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 18px 20px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+  .date-card__head { display: flex; justify-content: space-between; align-items: center; }
+  .date-card label {
+    font-size: var(--fs-micro);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .date-card input[type="date"] {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--line-soft);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color-scheme: dark;
+  }
+  .date-card input[type="date"]:focus { outline: none; border-color: var(--brand-2); }
+
+  .today-btn {
+    font-size: var(--fs-micro);
+    color: var(--brand-2);
+    background: none;
+    border: 0;
+    cursor: pointer;
+    padding: 2px 4px;
+  }
+  .today-btn:hover { color: var(--red); }
+
+  /* result display */
+  .result-hero {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .result-hero__card {
+    flex: 1;
+    min-width: 120px;
+    padding: 20px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    text-align: center;
+  }
+  .result-hero__value {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 2.8rem);
+    font-weight: 700;
+    background: linear-gradient(90deg, var(--brand-2), var(--red));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height: 1;
+  }
+  .result-hero__label {
+    font-size: var(--fs-micro);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: 8px;
+  }
+
+  .stat-grid-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+  .stat-tile {
+    padding: 16px 18px;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+  }
+  .stat-tile__value {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .stat-tile__label {
+    font-size: var(--fs-micro);
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .status-msg { font-size: var(--fs-small); color: var(--text-dim); margin: 12px 0 20px; }
+  .status-msg.is-error { color: var(--red); }
+</style>
+</head>
+<body>
+
+<div class="bg" aria-hidden="true">
+  <div class="bg__stars"></div>
+  <div class="bg__orb bg__orb--red"></div>
+  <div class="bg__orb bg__orb--orange"></div>
+</div>
+
+<!-- ============ NAV ============ -->
+<header class="nav">
+  <div class="wrap nav__inner">
+    <a href="../index.html" class="brand">
+      <img src="../assets/logos/hitend-mark.png" alt="" class="brand__mark">
+      HiTend Digital
+    </a>
+    <nav class="nav__links" aria-label="Primary">
+      <a href="../index.html" class="nav__link">Home</a>
+      <a href="../index.html#tools" class="nav__link">Web tools</a>
+      <a href="../apps.html" class="btn btn--primary btn--sm nav__link--apps">Browse apps</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ HEADER ============ -->
+  <section class="hero" style="padding-bottom: clamp(20px, 3vw, 36px);">
+    <div class="wrap enter">
+      <p class="eyebrow" style="--i:0">Free · runs in your browser</p>
+      <h1 class="hero__title" style="font-size: var(--fs-h1); --i:1">Age &amp; Date <span class="grad">Calculator</span></h1>
+      <p class="hero__sub" style="--i:2">
+        Find your exact age, or the exact gap between any two dates. Updates instantly as you pick.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ TOOL ============ -->
+  <section class="section section--tight">
+    <div class="wrap" data-reveal>
+
+      <div class="type-tabs" role="tablist">
+        <button type="button" class="type-tab is-active" data-mode="age">Age Calculator</button>
+        <button type="button" class="type-tab" data-mode="diff">Date Difference</button>
+      </div>
+
+      <!-- ===== AGE CALCULATOR ===== -->
+      <div class="mode-panel" id="panel-age">
+
+        <div class="date-row">
+          <div class="date-card">
+            <label for="birthDate">Date of birth</label>
+            <input type="date" id="birthDate">
+          </div>
+          <div class="date-card">
+            <div class="date-card__head">
+              <label for="asOfDate">Calculate age as of</label>
+              <button type="button" class="today-btn" id="todayBtn">Use today</button>
+            </div>
+            <input type="date" id="asOfDate">
+          </div>
+        </div>
+
+        <p class="status-msg" id="ageStatus"></p>
+
+        <div id="ageResults">
+          <div class="result-hero">
+            <div class="result-hero__card">
+              <div class="result-hero__value" id="ageYears">—</div>
+              <div class="result-hero__label">Years</div>
+            </div>
+            <div class="result-hero__card">
+              <div class="result-hero__value" id="ageMonths">—</div>
+              <div class="result-hero__label">Months</div>
+            </div>
+            <div class="result-hero__card">
+              <div class="result-hero__value" id="ageDays">—</div>
+              <div class="result-hero__label">Days</div>
+            </div>
+          </div>
+
+          <div class="stat-grid-list">
+            <div class="stat-tile"><div class="stat-tile__value" id="totalDays">—</div><div class="stat-tile__label">Total days lived</div></div>
+            <div class="stat-tile"><div class="stat-tile__value" id="totalWeeks">—</div><div class="stat-tile__label">Total weeks</div></div>
+            <div class="stat-tile"><div class="stat-tile__value" id="totalHours">—</div><div class="stat-tile__label">Total hours</div></div>
+            <div class="stat-tile"><div class="stat-tile__value" id="totalMinutes">—</div><div class="stat-tile__label">Total minutes</div></div>
+            <div class="stat-tile"><div class="stat-tile__value" id="bornWeekday">—</div><div class="stat-tile__label">Born on a</div></div>
+            <div class="stat-tile"><div class="stat-tile__value" id="nextBirthday">—</div><div class="stat-tile__label">Until next birthday</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== DATE DIFFERENCE ===== -->
+      <div class="mode-panel is-hidden" id="panel-diff">
+
+        <div class="date-row">
+          <div class="date-card">
+            <label for="startDate">Start date</label>
+            <input type="date" id="startDate">
+          </div>
+          <div class="date-card">
+            <div class="date-card__head">
+              <label for="endDate">End date</label>
+              <button type="button" class="today-btn" id="endTodayBtn">Use today</button>
+            </div>
+            <input type="date" id="endDate">
+          </div>
+        </div>
+
+        <p class="status-msg" id="diffStatus"></p>
+
+        <div id="diffResults">
+          <div class="result-hero">
+            <div class="result-hero__card">
+              <div class="result-hero__value" id="diffYears">—</div>
+              <div class="result-hero__label">Years</div>
+            </div>
+            <div class="result-hero__card">
+              <div class="result-hero__value" id="diffMonths">—</div>
+              <div class="result-hero__label">Months</div>
+            </div>
+            <div class="result-hero__card">
+              <div class="result-hero__value" id="diffDays">—</div>
+              <div class="result-hero__label">Days</div>
+            </div>
+          </div>
+
+          <div class="stat-grid-list">
+            <div class="stat-tile"><div class="stat-tile__value" id="diffTotalDays">—</div><div class="stat-tile__label">Total days</div></div>
+            <div class="stat-tile"><div class="stat-tile__value" id="diffTotalWeeks">—</div><div class="stat-tile__label">Total weeks</div></div>
+            <div class="stat-tile"><div class="stat-tile__value" id="diffTotalMonths">—</div><div class="stat-tile__label">Total months (approx.)</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <span>&copy; <span data-year>2026</span> HiTend Digital. All rights reserved.</span>
+    <a class="footer__mail" href="mailto:contact@hitenddigital.com">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+        <path d="M3 7l9 6 9-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      contact@hitenddigital.com
+    </a>
+  </div>
+</footer>
+
+<script src="../script.js" defer></script>
+<script>
+(function () {
+  'use strict';
+
+  var tabs = document.querySelectorAll('.type-tab');
+  var panels = {
+    age: document.getElementById('panel-age'),
+    diff: document.getElementById('panel-diff')
+  };
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      tabs.forEach(function (t) { t.classList.remove('is-active'); });
+      tab.classList.add('is-active');
+      var mode = tab.getAttribute('data-mode');
+      Object.keys(panels).forEach(function (key) {
+        panels[key].classList.toggle('is-hidden', key !== mode);
+      });
+    });
+  });
+
+  function toDateOnly(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function todayStr() {
+    var d = new Date();
+    var m = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    return d.getFullYear() + '-' + m + '-' + day;
+  }
+  function parseDateInput(str) {
+    if (!str) return null;
+    var parts = str.split('-');
+    return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+  }
+
+  function ymdBreakdown(earlier, later) {
+    var years = later.getFullYear() - earlier.getFullYear();
+    var months = later.getMonth() - earlier.getMonth();
+    var days = later.getDate() - earlier.getDate();
+    if (days < 0) {
+      months--;
+      var prevMonthLastDay = new Date(later.getFullYear(), later.getMonth(), 0).getDate();
+      days += prevMonthLastDay;
+    }
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+    return { years: years, months: months, days: days };
+  }
+
+  /* ================= AGE CALCULATOR ================= */
+  var birthDate = document.getElementById('birthDate');
+  var asOfDate = document.getElementById('asOfDate');
+  var todayBtn = document.getElementById('todayBtn');
+  var ageStatus = document.getElementById('ageStatus');
+  var ageResults = document.getElementById('ageResults');
+
+  function setAgeStatus(msg, isError) {
+    ageStatus.textContent = msg || '';
+    ageStatus.classList.toggle('is-error', !!isError);
+    ageResults.style.display = msg ? 'none' : '';
+  }
+
+  function updateAge() {
+    var bStr = birthDate.value, aStr = asOfDate.value;
+    if (!bStr) { setAgeStatus('Pick a date of birth to see the results.'); return; }
+    var birth = parseDateInput(bStr);
+    var asOf = aStr ? parseDateInput(aStr) : toDateOnly(new Date());
+
+    if (birth > asOf) { setAgeStatus('Date of birth is after the "as of" date — pick an earlier birth date.', true); return; }
+    setAgeStatus('');
+
+    var ymd = ymdBreakdown(birth, asOf);
+    document.getElementById('ageYears').textContent = ymd.years;
+    document.getElementById('ageMonths').textContent = ymd.months;
+    document.getElementById('ageDays').textContent = ymd.days;
+
+    var msDiff = asOf - birth;
+    var totalDays = Math.round(msDiff / 86400000);
+    document.getElementById('totalDays').textContent = totalDays.toLocaleString();
+    document.getElementById('totalWeeks').textContent = Math.floor(totalDays / 7).toLocaleString();
+    document.getElementById('totalHours').textContent = (totalDays * 24).toLocaleString();
+    document.getElementById('totalMinutes').textContent = (totalDays * 24 * 60).toLocaleString();
+
+    document.getElementById('bornWeekday').textContent = birth.toLocaleDateString(undefined, { weekday: 'long' });
+
+    // next birthday, relative to asOf
+    var nextBday = new Date(asOf.getFullYear(), birth.getMonth(), birth.getDate());
+    if (nextBday < asOf) nextBday = new Date(asOf.getFullYear() + 1, birth.getMonth(), birth.getDate());
+    var daysToBday = Math.round((nextBday - asOf) / 86400000);
+    document.getElementById('nextBirthday').textContent = daysToBday === 0 ? 'Today!' : daysToBday + ' day' + (daysToBday === 1 ? '' : 's');
+  }
+
+  birthDate.addEventListener('input', updateAge);
+  asOfDate.addEventListener('input', updateAge);
+  todayBtn.addEventListener('click', function () { asOfDate.value = todayStr(); updateAge(); });
+
+  /* ================= DATE DIFFERENCE ================= */
+  var startDate = document.getElementById('startDate');
+  var endDate = document.getElementById('endDate');
+  var endTodayBtn = document.getElementById('endTodayBtn');
+  var diffStatus = document.getElementById('diffStatus');
+  var diffResults = document.getElementById('diffResults');
+
+  function setDiffStatus(msg, isError) {
+    diffStatus.textContent = msg || '';
+    diffStatus.classList.toggle('is-error', !!isError);
+    diffResults.style.display = msg ? 'none' : '';
+  }
+
+  function updateDiff() {
+    var sStr = startDate.value, eStr = endDate.value;
+    if (!sStr || !eStr) { setDiffStatus('Pick a start and end date to see the results.'); return; }
+    var start = parseDateInput(sStr);
+    var end = parseDateInput(eStr);
+    var earlier = start <= end ? start : end;
+    var later = start <= end ? end : start;
+    setDiffStatus('');
+
+    var ymd = ymdBreakdown(earlier, later);
+    document.getElementById('diffYears').textContent = ymd.years;
+    document.getElementById('diffMonths').textContent = ymd.months;
+    document.getElementById('diffDays').textContent = ymd.days;
+
+    var totalDays = Math.round((later - earlier) / 86400000);
+    document.getElementById('diffTotalDays').textContent = totalDays.toLocaleString();
+    document.getElementById('diffTotalWeeks').textContent = Math.floor(totalDays / 7).toLocaleString();
+    document.getElementById('diffTotalMonths').textContent = (totalDays / 30.44).toFixed(1);
+  }
+
+  startDate.addEventListener('input', updateDiff);
+  endDate.addEventListener('input', updateDiff);
+  endTodayBtn.addEventListener('click', function () { endDate.value = todayStr(); updateDiff(); });
+
+  /* ---------- init ---------- */
+  asOfDate.value = todayStr();
+  endDate.value = todayStr();
+  setAgeStatus('Pick a date of birth to see the results.');
+  setDiffStatus('Pick a start and end date to see the results.');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Resizer — Free Online Tool | HiTend Digital</title>
+<meta name="description" content="Resize or compress an image right in your browser — set an exact width, height, or target file size. Nothing is uploaded anywhere.">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Image Resizer — HiTend Digital">
+<meta property="og:description" content="Resize or compress a photo entirely in your browser.">
+<meta property="og:url" content="https://hitenddigital.com/tools/image-resizer.html">
+
+<link rel="icon" href="../assets/logos/favicon.png">
+<link rel="stylesheet" href="../style.css">
+<style>
+  /* Tool-specific layout — small enough to keep in-page rather than growing the shared stylesheet. */
+  .tool {
+    display: grid;
+    gap: var(--gap);
+    grid-template-columns: minmax(0, 1fr);
+  }
+  @media (min-width: 860px) {
+    .tool { grid-template-columns: minmax(0, 1fr) minmax(280px, 340px); align-items: start; }
+  }
+
+  .dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+    min-height: 260px;
+    padding: 24px;
+    border-radius: var(--radius);
+    border: 1.5px dashed var(--line-soft);
+    background: var(--surface);
+    cursor: pointer;
+    transition: border-color var(--t) var(--ease), background var(--t) var(--ease);
+  }
+  .dropzone:hover, .dropzone.is-drag { border-color: var(--brand-2); background: var(--surface-2); }
+  .dropzone svg { width: 34px; height: 34px; color: var(--text-dim); }
+  .dropzone strong { color: var(--text); font-family: var(--font-display); }
+  .dropzone input { display: none; }
+
+  .preview-wrap {
+    display: none;
+    min-height: 260px;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+  }
+  .preview-wrap.is-shown { display: flex; }
+  .preview-wrap canvas { max-width: 100%; max-height: 420px; border-radius: 10px; }
+
+  .panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    position: sticky;
+    top: 86px;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: var(--fs-micro);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .field input[type="number"] {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--line-soft);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: var(--fs-small);
+  }
+  .field input[type="number"]:focus { outline: none; border-color: var(--brand-2); }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--fs-small);
+    color: var(--text-soft);
+  }
+
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--brand-2);
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--fs-small);
+    color: var(--text-dim);
+  }
+  .stat-row strong { color: var(--text); font-weight: 600; }
+
+  .hint { font-size: var(--fs-micro); color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<div class="bg" aria-hidden="true">
+  <div class="bg__stars"></div>
+  <div class="bg__orb bg__orb--red"></div>
+  <div class="bg__orb bg__orb--orange"></div>
+</div>
+
+<!-- ============ NAV ============ -->
+<header class="nav">
+  <div class="wrap nav__inner">
+    <a href="../index.html" class="brand">
+      <img src="../assets/logos/hitend-mark.png" alt="" class="brand__mark">
+      HiTend Digital
+    </a>
+    <nav class="nav__links" aria-label="Primary">
+      <a href="../index.html" class="nav__link">Home</a>
+      <a href="../index.html#tools" class="nav__link">Web tools</a>
+      <a href="../apps.html" class="btn btn--primary btn--sm nav__link--apps">Browse apps</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ HEADER ============ -->
+  <section class="hero" style="padding-bottom: clamp(20px, 3vw, 36px);">
+    <div class="wrap enter">
+      <p class="eyebrow" style="--i:0">Free · runs in your browser</p>
+      <h1 class="hero__title" style="font-size: var(--fs-h1); --i:1">Image <span class="grad">Resizer</span></h1>
+      <p class="hero__sub" style="--i:2">
+        Resize to an exact size or compress toward a target file size. Your image never leaves this page.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ TOOL ============ -->
+  <section class="section section--tight">
+    <div class="wrap">
+      <div class="tool" data-reveal>
+
+        <div>
+          <label class="dropzone" id="dropzone" for="fileInput">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 16V4M12 4l-4 4M12 4l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <strong>Click to choose an image</strong>
+            <span class="hint">or drag and drop it here — JPG, PNG, or WebP</span>
+            <input type="file" id="fileInput" accept="image/png, image/jpeg, image/webp">
+          </label>
+
+          <div class="preview-wrap" id="previewWrap">
+            <canvas id="canvas"></canvas>
+          </div>
+        </div>
+
+        <aside class="panel">
+          <h3 style="margin:0;">Settings</h3>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="widthInput">Width (px)</label>
+              <input type="number" id="widthInput" min="1" placeholder="—" disabled>
+            </div>
+            <div class="field">
+              <label for="heightInput">Height (px)</label>
+              <input type="number" id="heightInput" min="1" placeholder="—" disabled>
+            </div>
+          </div>
+
+          <label class="check">
+            <input type="checkbox" id="lockAspect" checked>
+            Lock aspect ratio
+          </label>
+
+          <div class="field">
+            <label for="qualityRange">Quality — <span id="qualityValue">85</span>%</label>
+            <input type="range" id="qualityRange" min="10" max="100" value="85" disabled>
+          </div>
+
+          <div class="field">
+            <label for="formatSelect">Output format</label>
+            <select id="formatSelect" disabled
+              style="padding:10px 12px; border-radius:10px; background:rgba(0,0,0,0.25); border:1px solid var(--line-soft); color:var(--text); font-family:var(--font-body); font-size:var(--fs-small);">
+              <option value="image/jpeg">JPEG</option>
+              <option value="image/webp">WebP</option>
+              <option value="image/png">PNG</option>
+            </select>
+          </div>
+
+          <div class="stat-row"><span>Original size</span><strong id="statOriginal">—</strong></div>
+          <div class="stat-row"><span>Estimated output</span><strong id="statEstimate">—</strong></div>
+
+          <button type="button" class="btn btn--primary btn--block" id="downloadBtn" disabled>Download image</button>
+          <p class="hint">Estimate is measured from the actual encoded file, not guessed.</p>
+        </aside>
+
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <span>&copy; <span data-year>2026</span> HiTend Digital. All rights reserved.</span>
+    <a class="footer__mail" href="mailto:contact@hitenddigital.com">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+        <path d="M3 7l9 6 9-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      contact@hitenddigital.com
+    </a>
+  </div>
+</footer>
+
+<script src="../script.js" defer></script>
+<script>
+(function () {
+  'use strict';
+
+  var dropzone   = document.getElementById('dropzone');
+  var fileInput  = document.getElementById('fileInput');
+  var previewWrap= document.getElementById('previewWrap');
+  var canvas     = document.getElementById('canvas');
+  var ctx        = canvas.getContext('2d');
+
+  var widthInput  = document.getElementById('widthInput');
+  var heightInput = document.getElementById('heightInput');
+  var lockAspect  = document.getElementById('lockAspect');
+  var qualityRange= document.getElementById('qualityRange');
+  var qualityValue= document.getElementById('qualityValue');
+  var formatSelect= document.getElementById('formatSelect');
+  var downloadBtn = document.getElementById('downloadBtn');
+  var statOriginal= document.getElementById('statOriginal');
+  var statEstimate= document.getElementById('statEstimate');
+
+  var img = null;
+  var naturalW = 0, naturalH = 0;
+  var originalBytes = 0;
+  var currentBlob = null;
+  var reencodeTimer = null;
+
+  function bytesToLabel(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+    return (b / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+
+  function enableControls(enabled) {
+    [widthInput, heightInput, qualityRange, formatSelect, downloadBtn].forEach(function (el) {
+      el.disabled = !enabled;
+    });
+  }
+
+  function loadFile(file) {
+    if (!file || file.type.indexOf('image/') !== 0) return;
+    originalBytes = file.size;
+    statOriginal.textContent = bytesToLabel(originalBytes);
+
+    var url = URL.createObjectURL(file);
+    var image = new Image();
+    image.onload = function () {
+      img = image;
+      naturalW = image.naturalWidth;
+      naturalH = image.naturalHeight;
+      widthInput.value = naturalW;
+      heightInput.value = naturalH;
+      formatSelect.value = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+      enableControls(true);
+      previewWrap.classList.add('is-shown');
+      URL.revokeObjectURL(url);
+      render();
+    };
+    image.src = url;
+  }
+
+  function render() {
+    if (!img) return;
+    var w = Math.max(1, parseInt(widthInput.value, 10) || naturalW);
+    var h = Math.max(1, parseInt(heightInput.value, 10) || naturalH);
+
+    canvas.width = w;
+    canvas.height = h;
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+
+    var format = formatSelect.value;
+    var quality = format === 'image/png' ? undefined : (parseInt(qualityRange.value, 10) / 100);
+    qualityRange.disabled = (format === 'image/png');
+
+    canvas.toBlob(function (blob) {
+      currentBlob = blob;
+      statEstimate.textContent = blob ? bytesToLabel(blob.size) : '—';
+    }, format, quality);
+  }
+
+  function scheduleRender() {
+    clearTimeout(reencodeTimer);
+    reencodeTimer = setTimeout(render, 120);
+  }
+
+  dropzone.addEventListener('click', function (e) {
+    if (e.target !== fileInput) fileInput.click();
+  });
+  fileInput.addEventListener('change', function () { loadFile(fileInput.files[0]); });
+
+  ['dragenter', 'dragover'].forEach(function (evt) {
+    dropzone.addEventListener(evt, function (e) {
+      e.preventDefault();
+      dropzone.classList.add('is-drag');
+    });
+  });
+  ['dragleave', 'drop'].forEach(function (evt) {
+    dropzone.addEventListener(evt, function (e) {
+      e.preventDefault();
+      dropzone.classList.remove('is-drag');
+    });
+  });
+  dropzone.addEventListener('drop', function (e) {
+    var file = e.dataTransfer.files && e.dataTransfer.files[0];
+    loadFile(file);
+  });
+
+  widthInput.addEventListener('input', function () {
+    if (lockAspect.checked && naturalW) {
+      heightInput.value = Math.round((parseInt(widthInput.value, 10) || 0) * (naturalH / naturalW));
+    }
+    scheduleRender();
+  });
+  heightInput.addEventListener('input', function () {
+    if (lockAspect.checked && naturalH) {
+      widthInput.value = Math.round((parseInt(heightInput.value, 10) || 0) * (naturalW / naturalH));
+    }
+    scheduleRender();
+  });
+
+  qualityRange.addEventListener('input', function () {
+    qualityValue.textContent = qualityRange.value;
+    scheduleRender();
+  });
+  formatSelect.addEventListener('change', render);
+
+  downloadBtn.addEventListener('click', function () {
+    if (!currentBlob) return;
+    var ext = formatSelect.value.split('/')[1];
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(currentBlob);
+    a.download = 'resized.' + (ext === 'jpeg' ? 'jpg' : ext);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  });
+})();
+</script>
+</body>
+</html>
