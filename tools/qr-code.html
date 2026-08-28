@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR &amp; Barcode Scanner and Generator | HiTend Digital</title>
+<meta name="description" content="Scan a QR code or barcode with your camera or from an uploaded image, or generate your own QR code — entirely in your browser.">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="QR & Barcode — HiTend Digital">
+<meta property="og:description" content="Scan or generate QR codes and barcodes, right in your browser.">
+<meta property="og:url" content="https://hitenddigital.com/tools/qr-code.html">
+
+<link rel="icon" href="../assets/logos/favicon.png">
+<link rel="stylesheet" href="../style.css">
+<style>
+  .type-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+  .type-tab {
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-size: var(--fs-small);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--text-dim);
+    background: var(--surface);
+    border: 1px solid var(--line-soft);
+    cursor: pointer;
+    transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+  }
+  .type-tab.is-active {
+    color: var(--text);
+    background: linear-gradient(90deg, var(--brand), var(--red));
+    border-color: transparent;
+  }
+  .mode-panel.is-hidden { display: none; }
+
+  /* ================= SCANNER ================= */
+  .scan-layout {
+    display: grid;
+    gap: var(--gap);
+    grid-template-columns: minmax(0, 1fr);
+  }
+  @media (min-width: 780px) {
+    .scan-layout { grid-template-columns: minmax(0, 1fr) minmax(260px, 320px); align-items: start; }
+  }
+
+  .scan-frame {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    aspect-ratio: 1 / 1;
+    margin-inline: auto;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #000;
+    border: 1px solid var(--line-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
+  }
+  .scan-frame video,
+  .scan-frame img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .scan-frame video.is-hidden,
+  .scan-frame img.is-hidden { display: none; }
+
+  .scan-frame__placeholder {
+    color: var(--text-dim);
+    text-align: center;
+    padding: 24px;
+    font-size: var(--fs-small);
+    max-width: 30ch;
+  }
+  .scan-frame__placeholder svg { width: 32px; height: 32px; margin-bottom: 10px; color: var(--text-dim); }
+
+  /* ---- interactive crop stage (gallery image: pan + pinch/slider zoom) ---- */
+  .crop-stage {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    cursor: grab;
+  }
+  .crop-stage.is-hidden { display: none; }
+  .crop-stage.is-dragging { cursor: grabbing; }
+  .crop-stage img {
+    position: absolute;
+    top: 0; left: 0;
+    transform-origin: 0 0;
+    width: auto; height: auto;
+    max-width: none;
+    object-fit: unset;
+    will-change: transform;
+    pointer-events: none;
+  }
+
+  /* plain bordered square — no dimming or blur outside it, matching what
+     was actually asked for: a clean overlay, not a masked cutout */
+  .scan-reticle {
+    position: absolute;
+    inset: 14%;
+    z-index: 4;
+    border: 2px solid rgba(255,122,60,0.85);
+    border-radius: 18px;
+    pointer-events: none;
+  }
+  .scan-reticle.is-hidden { display: none; }
+
+  .scan-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 14px; }
+  .crop-zoom-row {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .crop-zoom-row.is-shown { display: flex; }
+  .crop-zoom-row input[type="range"] { flex: 1; accent-color: var(--brand-2); }
+  .crop-zoom-row span { font-size: var(--fs-micro); color: var(--text-dim); flex: none; }
+
+  .scan-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+
+  .scan-status { font-size: var(--fs-small); color: var(--text-dim); }
+  .scan-status.is-error { color: var(--red); }
+
+  .scan-result {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    background: rgba(226,84,43,0.1);
+    border: 1px solid var(--line);
+  }
+  .scan-result.is-shown { display: flex; }
+  .scan-result__format {
+    font-family: var(--font-display);
+    font-size: var(--fs-micro);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--brand-2);
+  }
+  .scan-result__value { font-size: var(--fs-small); color: var(--text); word-break: break-all; }
+  .scan-result__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .scan-upload-divider {
+    display: flex; align-items: center; gap: 10px;
+    font-size: var(--fs-micro); color: var(--text-dim);
+  }
+  .scan-upload-divider::before, .scan-upload-divider::after { content: ''; flex: 1; height: 1px; background: var(--line-soft); }
+  .scan-upload-btn { width: 100%; }
+
+  /* ================= GENERATOR ================= */
+  .gen-type-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+  .gen-tool {
+    display: grid;
+    gap: var(--gap);
+    grid-template-columns: minmax(0, 1fr);
+  }
+  @media (min-width: 860px) {
+    .gen-tool { grid-template-columns: minmax(0, 1fr) minmax(300px, 360px); align-items: start; }
+  }
+  .gen-panel {
+    display: flex; flex-direction: column; gap: 16px;
+    padding: 20px; border-radius: var(--radius);
+    background: var(--surface); border: 1px solid var(--line);
+  }
+  .gen-field { display: flex; flex-direction: column; gap: 6px; }
+  .gen-field label { font-size: var(--fs-micro); letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-dim); }
+  .gen-field input[type="text"], .gen-field select, .gen-field textarea {
+    width: 100%; padding: 10px 12px; border-radius: 10px;
+    background: rgba(0,0,0,0.25); border: 1px solid var(--line-soft);
+    color: var(--text); font-family: var(--font-body); font-size: var(--fs-small); resize: vertical;
+  }
+  .gen-field input:focus, .gen-field select:focus, .gen-field textarea:focus { outline: none; border-color: var(--brand-2); }
+  .gen-field-group { display: flex; flex-direction: column; gap: 12px; }
+  .gen-field-group.is-hidden { display: none; }
+  .gen-preview-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+    min-height: 320px; justify-content: center; padding: 28px;
+    border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line-soft);
+  }
+  .gen-qr-frame { padding: 10px; background: #ffffff; border-radius: 14px; box-shadow: 0 24px 60px -30px rgba(0,0,0,0.85); }
+  .gen-qr-frame canvas { display: block; width: 240px; height: 240px; }
+  input[type="range"] { width: 100%; accent-color: var(--brand-2); }
+</style>
+</head>
+<body>
+
+<div class="bg" aria-hidden="true">
+  <div class="bg__stars"></div>
+  <div class="bg__orb bg__orb--red"></div>
+  <div class="bg__orb bg__orb--orange"></div>
+</div>
+
+<!-- ============ NAV ============ -->
+<header class="nav">
+  <div class="wrap nav__inner">
+    <a href="../index.html" class="brand">
+      <img src="../assets/logos/hitend-mark.png" alt="" class="brand__mark">
+      HiTend Digital
+    </a>
+    <nav class="nav__links" aria-label="Primary">
+      <a href="../index.html" class="nav__link">Home</a>
+      <a href="../index.html#tools" class="nav__link">Web tools</a>
+      <a href="../apps.html" class="btn btn--primary btn--sm nav__link--apps">Browse apps</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ HEADER ============ -->
+  <section class="hero" style="padding-bottom: clamp(20px, 3vw, 36px);">
+    <div class="wrap enter">
+      <p class="eyebrow" style="--i:0">Free · runs in your browser</p>
+      <h1 class="hero__title" style="font-size: var(--fs-h1); --i:1">QR &amp; <span class="grad">Barcode</span></h1>
+      <p class="hero__sub" style="--i:2">
+        Scan a code with your camera or an image, or generate your own. Nothing is ever sent to a server.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ TOOL ============ -->
+  <section class="section section--tight">
+    <div class="wrap" data-reveal>
+
+      <div class="type-tabs" role="tablist">
+        <button type="button" class="type-tab is-active" data-mode="scan">Scan</button>
+        <button type="button" class="type-tab" data-mode="generate">Generate</button>
+      </div>
+
+      <!-- ===== SCAN ===== -->
+      <div class="mode-panel" id="panel-scan">
+        <div class="scan-layout">
+
+          <div>
+            <div class="scan-frame" id="scanFrame">
+              <div class="scan-frame__placeholder" id="scanPlaceholder">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 8V6a2 2 0 0 1 2-2h2M20 8V6a2 2 0 0 0-2-2h-2M4 16v2a2 2 0 0 0 2 2h2M20 16v2a2 2 0 0 1-2 2h-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  <rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.8"/>
+                </svg>
+                <div id="scanPlaceholderText">Starting camera…</div>
+              </div>
+
+              <video id="scanVideo" class="is-hidden" playsinline muted></video>
+
+              <div class="crop-stage is-hidden" id="cropStage">
+                <img id="cropImage" alt="Uploaded image being scanned">
+              </div>
+
+              <div class="scan-reticle is-hidden" id="scanReticle"></div>
+            </div>
+
+            <div class="scan-controls">
+              <button type="button" class="btn btn--primary btn--sm" id="startScanBtn">Start camera</button>
+              <button type="button" class="btn btn--ghost btn--sm is-hidden" id="stopScanBtn">Stop camera</button>
+              <button type="button" class="btn btn--primary btn--sm is-hidden" id="decodeCropBtn">Decode this view</button>
+              <select id="cameraSelect" class="is-hidden" style="padding:9px 12px; border-radius:10px; background:rgba(0,0,0,0.25); border:1px solid var(--line-soft); color:var(--text); font-size:var(--fs-small);"></select>
+            </div>
+
+            <div class="crop-zoom-row" id="cropZoomRow">
+              <span>Zoom</span>
+              <input type="range" id="cropZoomRange" min="100" max="400" value="100">
+            </div>
+          </div>
+
+          <aside class="scan-panel">
+            <p class="scan-status" id="scanStatus">Starting camera automatically…</p>
+
+            <div class="scan-result" id="scanResult">
+              <span class="scan-result__format" id="scanFormat">QR Code</span>
+              <span class="scan-result__value" id="scanValue"></span>
+              <div class="scan-result__actions">
+                <button type="button" class="btn btn--ghost btn--sm" id="copyResultBtn">Copy</button>
+                <a class="btn btn--primary btn--sm is-hidden" id="openLinkBtn" href="#" target="_blank" rel="noopener">Open link</a>
+              </div>
+            </div>
+
+            <div class="scan-upload-divider">or</div>
+
+            <label class="btn btn--ghost scan-upload-btn" for="scanImageInput" style="cursor:pointer;">
+              Scan from an image
+            </label>
+            <input type="file" id="scanImageInput" accept="image/png, image/jpeg, image/webp" style="display:none;">
+          </aside>
+        </div>
+      </div>
+
+      <!-- ===== GENERATE ===== -->
+      <div class="mode-panel is-hidden" id="panel-generate">
+        <div class="gen-tool">
+
+          <div class="gen-preview-wrap" id="previewWrap">
+            <p style="color:var(--text-dim); font-size:var(--fs-small); text-align:center; max-width:30ch;" id="emptyState">Fill in the form to generate a QR code — it appears here instantly.</p>
+            <p style="color:var(--red); font-size:var(--fs-small); text-align:center; max-width:34ch; display:none;" id="libError">The QR engine couldn't load — check your internet connection and reload the page.</p>
+            <div class="gen-qr-frame is-hidden" id="qrFrame"></div>
+            <button type="button" class="btn btn--primary is-hidden" id="downloadBtn">Download PNG</button>
+          </div>
+
+          <div id="qrEncodeHost" style="position:absolute; width:0; height:0; overflow:hidden; opacity:0; pointer-events:none;"></div>
+
+          <aside class="gen-panel">
+            <div class="gen-type-tabs" role="tablist">
+              <button type="button" class="type-tab is-active" data-gentype="link">Link</button>
+              <button type="button" class="type-tab" data-gentype="text">Text</button>
+              <button type="button" class="type-tab" data-gentype="wifi">Wi-Fi</button>
+            </div>
+
+            <div class="gen-field-group" id="group-link">
+              <div class="gen-field">
+                <label for="linkInput">URL</label>
+                <input type="text" id="linkInput" placeholder="https://example.com">
+              </div>
+            </div>
+
+            <div class="gen-field-group is-hidden" id="group-text">
+              <div class="gen-field">
+                <label for="textInput">Text or note</label>
+                <textarea id="textInput" rows="4" placeholder="Anything you want encoded"></textarea>
+              </div>
+            </div>
+
+            <div class="gen-field-group is-hidden" id="group-wifi">
+              <div class="gen-field">
+                <label for="wifiSsid">Network name (SSID)</label>
+                <input type="text" id="wifiSsid" placeholder="Home WiFi">
+              </div>
+              <div class="gen-field">
+                <label for="wifiPassword">Password</label>
+                <input type="text" id="wifiPassword" placeholder="Leave blank if open">
+              </div>
+              <div class="gen-field">
+                <label for="wifiEncryption">Security</label>
+                <select id="wifiEncryption">
+                  <option value="WPA">WPA / WPA2</option>
+                  <option value="WEP">WEP</option>
+                  <option value="nopass">None (open network)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="gen-field">
+              <label for="sizeRange">Resolution — <span id="sizeValue">280</span> px <span style="opacity:.65;">(changes download quality, not the preview size)</span></label>
+              <input type="range" id="sizeRange" min="160" max="1200" step="20" value="280">
+            </div>
+
+            <div class="gen-field">
+              <label for="colorInput">Foreground color</label>
+              <input type="text" id="colorInput" value="#0a0503" style="max-width:120px;">
+            </div>
+
+            <p style="font-size:var(--fs-micro); color:var(--text-dim);">A white margin is added automatically around every code — scanners need it to detect the edges.</p>
+          </aside>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <span>&copy; <span data-year>2026</span> HiTend Digital. All rights reserved.</span>
+    <a class="footer__mail" href="mailto:contact@hitenddigital.com">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+        <path d="M3 7l9 6 9-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      contact@hitenddigital.com
+    </a>
+  </div>
+</footer>
+
+<script src="../script.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- top-level mode tabs ---------- */
+  var modeTabs = document.querySelectorAll('.type-tabs > .type-tab');
+  var modePanels = {
+    scan: document.getElementById('panel-scan'),
+    generate: document.getElementById('panel-generate')
+  };
+  modeTabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      modeTabs.forEach(function (t) { t.classList.remove('is-active'); });
+      tab.classList.add('is-active');
+      var mode = tab.getAttribute('data-mode');
+      Object.keys(modePanels).forEach(function (key) {
+        modePanels[key].classList.toggle('is-hidden', key !== mode);
+      });
+      if (mode !== 'scan') stopCamera();
+    });
+  });
+
+  /* ================= SCANNER ================= */
+  var scanPlaceholder = document.getElementById('scanPlaceholder');
+  var scanPlaceholderText = document.getElementById('scanPlaceholderText');
+  var scanVideo = document.getElementById('scanVideo');
+  var cropStage = document.getElementById('cropStage');
+  var cropImage = document.getElementById('cropImage');
+  var scanReticle = document.getElementById('scanReticle');
+  var startScanBtn = document.getElementById('startScanBtn');
+  var stopScanBtn = document.getElementById('stopScanBtn');
+  var decodeCropBtn = document.getElementById('decodeCropBtn');
+  var cameraSelect = document.getElementById('cameraSelect');
+  var scanStatus = document.getElementById('scanStatus');
+  var scanResult = document.getElementById('scanResult');
+  var scanFormat = document.getElementById('scanFormat');
+  var scanValue = document.getElementById('scanValue');
+  var copyResultBtn = document.getElementById('copyResultBtn');
+  var openLinkBtn = document.getElementById('openLinkBtn');
+  var scanImageInput = document.getElementById('scanImageInput');
+  var cropZoomRow = document.getElementById('cropZoomRow');
+  var cropZoomRange = document.getElementById('cropZoomRange');
+  var scanFrame = document.getElementById('scanFrame');
+
+  var codeReader = null;
+  var scanControls = null;
+  var lastDecodedText = null;
+
+  function setScanStatus(msg, isError) {
+    scanStatus.textContent = msg || '';
+    scanStatus.classList.toggle('is-error', !!isError);
+  }
+
+  function resetResult() {
+    lastDecodedText = null;
+    scanResult.classList.remove('is-shown');
+    openLinkBtn.classList.add('is-hidden');
+  }
+
+  function showResult(text, format) {
+    if (text === lastDecodedText) return;
+    lastDecodedText = text;
+    scanFormat.textContent = format || 'Code';
+    scanValue.textContent = text;
+    scanResult.classList.add('is-shown');
+    var looksLikeUrl = /^https?:\/\//i.test(text);
+    openLinkBtn.classList.toggle('is-hidden', !looksLikeUrl);
+    if (looksLikeUrl) openLinkBtn.href = text;
+  }
+
+  copyResultBtn.addEventListener('click', function () {
+    if (!scanValue.textContent || !navigator.clipboard) return;
+    navigator.clipboard.writeText(scanValue.textContent).then(function () {
+      var original = copyResultBtn.textContent;
+      copyResultBtn.textContent = 'Copied!';
+      setTimeout(function () { copyResultBtn.textContent = original; }, 1200);
+    });
+  });
+
+  // mode: 'placeholder' | 'video' | 'crop'
+  function showFrameMode(mode) {
+    scanPlaceholder.classList.toggle('is-hidden', mode !== 'placeholder');
+    scanVideo.classList.toggle('is-hidden', mode !== 'video');
+    cropStage.classList.toggle('is-hidden', mode !== 'crop');
+    scanReticle.classList.toggle('is-hidden', mode === 'placeholder');
+    cropZoomRow.classList.toggle('is-shown', mode === 'crop');
+    decodeCropBtn.classList.toggle('is-hidden', mode !== 'crop');
+  }
+
+  /* ---------- camera ---------- */
+  function startCamera(deviceId) {
+    if (!window.ZXing) { setScanStatus('The scanner engine couldn\'t load — check your internet connection and reload.', true); showFrameMode('placeholder'); scanPlaceholderText.textContent = 'Camera unavailable'; return; }
+
+    var isSecureOrigin = window.isSecureContext ||
+      location.protocol === 'https:' ||
+      location.hostname === 'localhost' ||
+      location.hostname === '127.0.0.1';
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !isSecureOrigin) {
+      showFrameMode('placeholder');
+      scanPlaceholderText.textContent = 'Camera unavailable';
+      if (!isSecureOrigin) {
+        setScanStatus('Camera access needs https:// or localhost. You\'re on ' + location.origin + ' — if testing locally, open http://127.0.0.1 (or http://localhost) instead of a LAN IP address.', true);
+      } else {
+        setScanStatus('This browser does not support camera access. You can still scan from an image below.', true);
+      }
+      return;
+    }
+
+    if (!codeReader) codeReader = new ZXing.BrowserMultiFormatReader();
+
+    setScanStatus('Requesting camera access…');
+    scanPlaceholderText.textContent = 'Starting camera…';
+    resetResult();
+
+    codeReader.decodeFromVideoDevice(deviceId || undefined, scanVideo, function (result) {
+      if (result) showResult(result.getText(), result.getBarcodeFormat ? String(result.getBarcodeFormat()) : 'Code');
+    }).then(function (controls) {
+      // The camera stream is live at this point — everything below is
+      // secondary (populating the camera list) and must NEVER be able to
+      // make this look like a failure. Each piece is isolated in its own
+      // try/catch so a problem there can't fall through to the outer
+      // .catch() below and wrongly hide a perfectly working video feed.
+      scanControls = controls;
+
+      try {
+        showFrameMode('video');
+        startScanBtn.classList.add('is-hidden');
+        stopScanBtn.classList.remove('is-hidden');
+        setScanStatus('Point your camera at a QR code or barcode.');
+      } catch (uiErr) { /* display already showed the working video by this point regardless */ }
+
+      try {
+        if (ZXing.BrowserCodeReader && typeof ZXing.BrowserCodeReader.listVideoInputDevices === 'function') {
+          ZXing.BrowserCodeReader.listVideoInputDevices()
+            .then(function (devices) {
+              cameraSelect.innerHTML = devices.map(function (d, i) {
+                return '<option value="' + d.deviceId + '">' + (d.label || 'Camera ' + (i + 1)) + '</option>';
+              }).join('');
+              cameraSelect.classList.toggle('is-hidden', devices.length < 2);
+            })
+            .catch(function () { /* camera list is a nice-to-have, never fatal */ });
+        }
+      } catch (listErr) { /* same — never let this affect the live video */ }
+    }).catch(function (err) {
+      showFrameMode('placeholder');
+      scanPlaceholderText.textContent = 'Camera unavailable';
+      var msg = 'Could not access the camera.';
+      if (err && err.name === 'NotAllowedError') msg = 'Camera permission was denied — allow camera access in your browser settings, then tap "Start camera" again.';
+      if (err && err.name === 'NotFoundError') msg = 'No camera was found on this device. You can still scan from an image below.';
+      setScanStatus(msg, true);
+    });
+  }
+
+  function stopCamera() {
+    if (scanControls) { scanControls.stop(); scanControls = null; }
+    showFrameMode('placeholder');
+    scanPlaceholderText.textContent = 'Camera stopped';
+    startScanBtn.classList.remove('is-hidden');
+    stopScanBtn.classList.add('is-hidden');
+    setScanStatus('Tap "Start camera" to resume scanning.');
+  }
+
+  startScanBtn.addEventListener('click', function () { startCamera(cameraSelect.value); });
+  stopScanBtn.addEventListener('click', stopCamera);
+  cameraSelect.addEventListener('change', function () { stopCamera(); startCamera(cameraSelect.value); });
+
+  /* ---------- gallery image: pan + pinch/slider zoom crop stage ---------- */
+  var crop = { scale: 1, x: 0, y: 0, minScale: 1, maxScale: 6, naturalW: 0, naturalH: 0 };
+  var dragState = null;
+  var pinchState = null;
+
+  function applyCropTransform() {
+    cropImage.style.transform = 'translate(' + crop.x + 'px, ' + crop.y + 'px) scale(' + crop.scale + ')';
+  }
+
+  function clampCropPosition() {
+    var frameRect = scanFrame.getBoundingClientRect();
+    var dispW = crop.naturalW * crop.scale;
+    var dispH = crop.naturalH * crop.scale;
+    var minX = Math.min(0, frameRect.width - dispW);
+    var maxX = Math.max(0, frameRect.width - dispW);
+    var minY = Math.min(0, frameRect.height - dispH);
+    var maxY = Math.max(0, frameRect.height - dispH);
+    crop.x = Math.max(minX, Math.min(maxX, crop.x));
+    crop.y = Math.max(minY, Math.min(maxY, crop.y));
+  }
+
+  function initCropView(img) {
+    var frameRect = scanFrame.getBoundingClientRect();
+    crop.naturalW = img.naturalWidth;
+    crop.naturalH = img.naturalHeight;
+    var coverScale = Math.max(frameRect.width / img.naturalWidth, frameRect.height / img.naturalHeight);
+    crop.minScale = coverScale;
+    crop.maxScale = coverScale * 6;
+    crop.scale = coverScale;
+    crop.x = (frameRect.width - img.naturalWidth * coverScale) / 2;
+    crop.y = (frameRect.height - img.naturalHeight * coverScale) / 2;
+    cropZoomRange.min = 100;
+    cropZoomRange.max = 600;
+    cropZoomRange.value = 100;
+    applyCropTransform();
+  }
+
+  cropStage.addEventListener('pointerdown', function (e) {
+    if (pinchState) return;
+    cropStage.setPointerCapture(e.pointerId);
+    cropStage.classList.add('is-dragging');
+    dragState = { startX: e.clientX, startY: e.clientY, cropStartX: crop.x, cropStartY: crop.y };
+  });
+  cropStage.addEventListener('pointermove', function (e) {
+    if (!dragState) return;
+    crop.x = dragState.cropStartX + (e.clientX - dragState.startX);
+    crop.y = dragState.cropStartY + (e.clientY - dragState.startY);
+    clampCropPosition();
+    applyCropTransform();
+  });
+  function endDrag(e) {
+    if (dragState) { try { cropStage.releasePointerCapture(e.pointerId); } catch (err) {} }
+    dragState = null;
+    cropStage.classList.remove('is-dragging');
+  }
+  cropStage.addEventListener('pointerup', endDrag);
+  cropStage.addEventListener('pointercancel', endDrag);
+
+  // pinch-to-zoom — real two-finger gesture, zooms around the fingers' midpoint
+  cropStage.addEventListener('touchstart', function (e) {
+    if (e.touches.length !== 2) return;
+    dragState = null;
+    var t = e.touches;
+    var dist = Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    var mid = { x: (t[0].clientX + t[1].clientX) / 2, y: (t[0].clientY + t[1].clientY) / 2 };
+    pinchState = { startDist: dist, startScale: crop.scale, startX: crop.x, startY: crop.y, mid: mid };
+  }, { passive: true });
+
+  cropStage.addEventListener('touchmove', function (e) {
+    if (!pinchState || e.touches.length !== 2) return;
+    var t = e.touches;
+    var dist = Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    var ratio = dist / pinchState.startDist;
+    var newScale = Math.max(crop.minScale, Math.min(crop.maxScale, pinchState.startScale * ratio));
+
+    var frameRect = scanFrame.getBoundingClientRect();
+    var midRelX = pinchState.mid.x - frameRect.left;
+    var midRelY = pinchState.mid.y - frameRect.top;
+    var imgX = (midRelX - pinchState.startX) / pinchState.startScale;
+    var imgY = (midRelY - pinchState.startY) / pinchState.startScale;
+
+    crop.scale = newScale;
+    crop.x = midRelX - imgX * newScale;
+    crop.y = midRelY - imgY * newScale;
+    clampCropPosition();
+    applyCropTransform();
+    cropZoomRange.value = Math.round((newScale / crop.minScale) * 100);
+  }, { passive: true });
+
+  cropStage.addEventListener('touchend', function (e) { if (e.touches.length < 2) pinchState = null; });
+
+  cropZoomRange.addEventListener('input', function () {
+    var frameRect = scanFrame.getBoundingClientRect();
+    var factor = parseInt(cropZoomRange.value, 10) / 100;
+    var newScale = crop.minScale * factor;
+    var centerX = frameRect.width / 2, centerY = frameRect.height / 2;
+    var imgX = (centerX - crop.x) / crop.scale;
+    var imgY = (centerY - crop.y) / crop.scale;
+    crop.scale = newScale;
+    crop.x = centerX - imgX * newScale;
+    crop.y = centerY - imgY * newScale;
+    clampCropPosition();
+    applyCropTransform();
+  });
+
+  function buildCropCanvas() {
+    var frameRect = scanFrame.getBoundingClientRect();
+    var canvas = document.createElement('canvas');
+    canvas.width = Math.round(frameRect.width);
+    canvas.height = Math.round(frameRect.height);
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.translate(crop.x, crop.y);
+    ctx.scale(crop.scale, crop.scale);
+    ctx.drawImage(cropImage, 0, 0);
+    return canvas;
+  }
+
+  // Both the automatic first attempt and the manual "Decode this view"
+  // button now go through this exact same path — a canvas snapshot of
+  // whatever is currently visible, fed in as a data URL. Feeding the raw
+  // blob URL straight to the decoder (the old automatic-attempt path) is
+  // what caused the display to go black right when a code was found; this
+  // canvas-based path never had that problem in manual testing, so both
+  // paths now share it instead of behaving differently.
+  function runDecodeFromCurrentView(failMessage) {
+    var canvas = buildCropCanvas();
+    setScanStatus('Reading…');
+    codeReader.decodeFromImageUrl(canvas.toDataURL('image/png')).then(function (result) {
+      showResult(result.getText(), result.getBarcodeFormat ? String(result.getBarcodeFormat()) : 'Code');
+      setScanStatus('Code detected.');
+    }).catch(function () {
+      setScanStatus(failMessage, true);
+    });
+  }
+
+  function decodeCurrentCropView() {
+    runDecodeFromCurrentView('No code found in this view — try zooming or repositioning the image.');
+  }
+  decodeCropBtn.addEventListener('click', decodeCurrentCropView);
+
+  scanImageInput.addEventListener('change', function () {
+    var file = scanImageInput.files[0];
+    if (!file || !window.ZXing) return;
+    if (!codeReader) codeReader = new ZXing.BrowserMultiFormatReader();
+
+    stopCamera();
+    resetResult();
+
+    var displayUrl = URL.createObjectURL(file);
+
+    cropImage.onload = function () {
+      showFrameMode('crop');
+      initCropView(cropImage);
+      runDecodeFromCurrentView('Couldn\'t read that automatically — pinch to zoom or drag to line up the code with the square, then tap "Decode this view".');
+    };
+    cropImage.onerror = function () {
+      setScanStatus('Could not load that image — try a different file.', true);
+    };
+    cropImage.src = displayUrl;
+    scanImageInput.value = '';
+  });
+
+  // auto-start the camera as soon as the page loads — no tap required
+  startCamera();
+
+  /* ================= GENERATOR ================= */
+  var genTabs = document.querySelectorAll('.gen-type-tabs .type-tab');
+  var groups = {
+    link: document.getElementById('group-link'),
+    text: document.getElementById('group-text'),
+    wifi: document.getElementById('group-wifi')
+  };
+
+  var linkInput = document.getElementById('linkInput');
+  var textInput = document.getElementById('textInput');
+  var wifiSsid = document.getElementById('wifiSsid');
+  var wifiPassword = document.getElementById('wifiPassword');
+  var wifiEncryption = document.getElementById('wifiEncryption');
+  var sizeRange = document.getElementById('sizeRange');
+  var sizeValue = document.getElementById('sizeValue');
+  var colorInput = document.getElementById('colorInput');
+
+  var emptyState = document.getElementById('emptyState');
+  var libError = document.getElementById('libError');
+  var qrFrame = document.getElementById('qrFrame');
+  var qrEncodeHost = document.getElementById('qrEncodeHost');
+  var downloadBtn = document.getElementById('downloadBtn');
+
+  var currentGenType = 'link';
+  var genRenderTimer = null;
+  var finalCanvas = null;
+
+  function wifiEscape(s) { return String(s).replace(/([\\;,:"])/g, '\\$1'); }
+
+  function buildPayload() {
+    if (currentGenType === 'link') return linkInput.value.trim();
+    if (currentGenType === 'text') return textInput.value.trim();
+    if (currentGenType === 'wifi') {
+      var ssid = wifiSsid.value.trim();
+      if (!ssid) return '';
+      var enc = wifiEncryption.value;
+      var pass = wifiPassword.value;
+      return 'WIFI:T:' + enc + ';S:' + wifiEscape(ssid) + ';' +
+             (enc === 'nopass' ? '' : 'P:' + wifiEscape(pass) + ';') + ';';
+    }
+    return '';
+  }
+
+  function showGenState(state) {
+    emptyState.style.display = state === 'empty' ? 'block' : 'none';
+    libError.style.display = state === 'error' ? 'block' : 'none';
+    qrFrame.classList.toggle('is-hidden', state !== 'ready');
+    downloadBtn.classList.toggle('is-hidden', state !== 'ready');
+  }
+
+  function renderQr() {
+    var payload = buildPayload();
+    var size = parseInt(sizeRange.value, 10);
+    sizeValue.textContent = size;
+
+    if (!payload) { showGenState('empty'); return; }
+    if (typeof QRCode === 'undefined') { showGenState('error'); return; }
+
+    qrEncodeHost.innerHTML = '';
+    var encoder = new QRCode(qrEncodeHost, {
+      text: payload, width: size, height: size,
+      colorDark: colorInput.value || '#000000', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+
+    var rawCanvas = qrEncodeHost.querySelector('canvas');
+    var model = encoder._oQRCode;
+    if (!rawCanvas || !model) { showGenState('error'); return; }
+
+    var moduleCount = model.getModuleCount();
+    var cellSize = size / moduleCount;
+    var quietZone = Math.round(cellSize * 4);
+
+    var padded = document.createElement('canvas');
+    padded.width = size + quietZone * 2;
+    padded.height = size + quietZone * 2;
+    var pctx = padded.getContext('2d');
+    pctx.fillStyle = '#ffffff';
+    pctx.fillRect(0, 0, padded.width, padded.height);
+    pctx.drawImage(rawCanvas, quietZone, quietZone, size, size);
+
+    finalCanvas = padded;
+    qrFrame.innerHTML = '';
+    qrFrame.appendChild(padded);
+    showGenState('ready');
+  }
+
+  function scheduleGenRender() {
+    clearTimeout(genRenderTimer);
+    genRenderTimer = setTimeout(renderQr, 150);
+  }
+
+  genTabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      genTabs.forEach(function (t) { t.classList.remove('is-active'); });
+      tab.classList.add('is-active');
+      currentGenType = tab.getAttribute('data-gentype');
+      Object.keys(groups).forEach(function (key) {
+        groups[key].classList.toggle('is-hidden', key !== currentGenType);
+      });
+      renderQr();
+    });
+  });
+
+  [linkInput, textInput, wifiSsid, wifiPassword, wifiEncryption, sizeRange, colorInput].forEach(function (el) {
+    el.addEventListener('input', scheduleGenRender);
+    el.addEventListener('change', scheduleGenRender);
+  });
+
+  downloadBtn.addEventListener('click', function () {
+    if (!finalCanvas) return;
+    var a = document.createElement('a');
+    a.href = finalCanvas.toDataURL('image/png');
+    a.download = 'qr-code.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
+
+  linkInput.value = 'https://hitenddigital.com';
+  renderQr();
+})();
+</script>
+</body>
+</html>
