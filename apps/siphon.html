@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Siphon Downloader — Video Downloader for Windows &amp; Android | HiTend Digital</title>
+<meta name="description" content="Siphon Downloader is a clean, native video downloader for Windows and Android, powered by yt-dlp with bundled ffmpeg. Free download from HiTend Digital.">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Siphon Downloader — Video Downloader for Windows & Android">
+<meta property="og:description" content="A clean, native video downloader built on yt-dlp. No ads, no bloat.">
+<meta property="og:image" content="../assets/logos/og-siphon.png">
+<meta property="og:url" content="https://hitenddigital.com/apps/siphon.html">
+
+<link rel="icon" href="../assets/logos/favicon.png">
+<link rel="stylesheet" href="../style.css">
+<style>
+  /* Windows screenshots are desktop UI, not phone screens — widen the frame for that section only. */
+  .gallery--wide .shot { aspect-ratio: 16 / 10; }
+
+  .platform-icon { width: 15px; height: 15px; flex: none; }
+  .btn--accent .platform-icon, .btn--ghost .platform-icon { margin-right: 1px; }
+</style>
+</head>
+<body data-app="siphon">
+
+<div class="bg" aria-hidden="true">
+  <div class="bg__stars"></div>
+  <div class="bg__orb bg__orb--red"></div>
+  <div class="bg__orb bg__orb--orange"></div>
+</div>
+
+<!-- ============ NAV ============ -->
+<header class="nav">
+  <div class="wrap nav__inner">
+    <a href="../index.html" class="brand">
+      <img src="../assets/logos/hitend-mark.png" alt="" class="brand__mark">
+      HiTend Digital
+    </a>
+    <nav class="nav__links" aria-label="Primary">
+      <a href="../index.html" class="nav__link">Home</a>
+      <a href="../apps.html" class="nav__link">Apps</a>
+      <a href="../apps.html" class="btn btn--primary btn--sm nav__link--apps">Browse apps</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ APP HERO ============ -->
+  <section class="app-hero wrap enter">
+    <img src="../assets/logos/siphon.png" alt="" class="app-hero__logo" style="--i:0">
+
+    <div style="--i:1">
+      <span class="badge" style="margin-bottom:14px;">Live · Windows &amp; Android</span>
+      <h1 class="app-hero__title">Siphon Downloader</h1>
+      <p class="lead" style="margin-bottom: 26px;">
+        A clean, native video downloader — built on yt-dlp, without the clutter of a browser extension or a cracked emulator workflow. Now on both Windows and Android.
+      </p>
+
+      <div class="btn-row">
+        <!-- Windows: hover on desktop reveals Latest / All Versions; click/tap works everywhere -->
+        <div class="dl-split">
+          <button type="button" class="btn btn--accent dl-split__trigger">
+            <svg class="platform-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5L11 4.3V11.5H3zM12 4.2L21 3v8.3H12zM3 12.5H11V19.7L3 18.5zM12 12.5H21V21L12 19.7z"/></svg>
+            For Windows
+            <svg class="dl-split__caret" width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="dl-menu" role="menu">
+            <a href="https://github.com/QasimNasir05/Siphon_Windows/releases/download/v0.2.0/Siphon-Setup-0.2.0.exe" class="dl-option" role="menuitem">
+              Latest release
+              <small>v0.2.0 · Windows installer (.exe)</small>
+            </a>
+            <a href="#versions-windows" class="dl-option" role="menuitem" data-scroll-to="#versions-windows">
+              All versions
+              <small>Full Windows release history below</small>
+            </a>
+          </div>
+        </div>
+
+        <!-- Android: same hover/tap split pattern as Windows -->
+        <div class="dl-split">
+          <button type="button" class="btn btn--ghost dl-split__trigger">
+            <svg class="platform-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 9.5V17a1 1 0 0 0 1 1h1v3a1 1 0 0 0 2 0v-3h2v3a1 1 0 0 0 2 0v-3h1a1 1 0 0 0 1-1V9.5H7z"/><rect x="4.5" y="10" width="1.6" height="5.5" rx="0.8"/><rect x="17.9" y="10" width="1.6" height="5.5" rx="0.8"/><path d="M8.5 4.5L7.3 2.8M15.5 4.5l1.2-1.7" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><path d="M7.3 9.2a4.7 4.7 0 0 1 9.4 0z"/></svg>
+            For Android
+            <svg class="dl-split__caret" width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="dl-menu" role="menu">
+            <a href="https://github.com/QasimNasir05/Siphon_APK/releases/download/v1.0.0/Siphon.apk" class="dl-option" role="menuitem">
+              Latest release
+              <small>v1.0.0 · Android APK</small>
+            </a>
+            <a href="#versions-android" class="dl-option" role="menuitem" data-scroll-to="#versions-android">
+              All versions
+              <small>Full Android release history below</small>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero__meta">
+        <span class="chip"><span class="chip__dot"></span>Powered by yt-dlp</span>
+        <span class="chip"><span class="chip__dot"></span>Auto-updating downloader engine</span>
+        <span class="chip"><span class="chip__dot"></span>Bundled ffmpeg</span>
+        <span class="chip"><span class="chip__dot"></span>No ads</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DESCRIPTION ============ -->
+  <section class="section section--tight">
+    <div class="wrap prose" data-reveal>
+      <h2>What Siphon does</h2>
+      <p>
+        Siphon Downloader gives you a proper native app for saving videos, instead of routing everything through a browser tab or a sketchy site. Paste a link, pick a quality, and Siphon handles the rest — using yt-dlp under the hood for reliable, wide-ranging site support.
+      </p>
+      <ul>
+        <li>Automatic quality and format selection, with manual override when you want it</li>
+        <li>yt-dlp updates itself in the background, so support for sites stays current</li>
+        <li>Bundled ffmpeg on Windows — no separate install, no PATH configuration</li>
+        <li>Uses your browser's existing cookies when a site needs you to be signed in</li>
+        <li>Built-in download history and a playlist picker for multi-video links</li>
+        <li>Audio-only (MP3) downloads available on both platforms</li>
+      </ul>
+      <p>
+        Siphon is built and maintained under HiTend Digital. The Android app is distributed as a direct APK from this site rather than the Play Store, and checks for updates in the background.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ WINDOWS: SCREENSHOTS + VERSIONS ============ -->
+  <section class="section section--tight">
+    <div class="wrap">
+      <div data-reveal>
+        <p class="eyebrow">Windows</p>
+        <h2>Inside Siphon for Windows</h2>
+      </div>
+      <div class="gallery gallery--wide">
+        <div class="shot" data-reveal style="--i:0"><img src="../assets/screenshots/siphon-1.webp" alt="Siphon Windows main download screen"></div>
+        <div class="shot" data-reveal style="--i:1"><img src="../assets/screenshots/siphon-2.webp" alt="Siphon Windows format and quality selector"></div>
+        <div class="shot" data-reveal style="--i:2"><img src="../assets/screenshots/siphon-3.webp" alt="Siphon Windows download history"></div>
+        <div class="shot" data-reveal style="--i:3"><img src="../assets/screenshots/siphon-4.webp" alt="Siphon Windows playlist picker"></div>
+        <div class="shot" data-reveal style="--i:4"><img src="../assets/screenshots/siphon-5.webp" alt="Siphon Windows settings screen"></div>
+        <div class="shot" data-reveal style="--i:5"><img src="../assets/screenshots/siphon-6.webp" alt="Siphon Windows in-progress download"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="versions-windows" class="section section--tight">
+    <div class="wrap">
+      <div data-reveal>
+        <p class="eyebrow">Release history</p>
+        <h2>Windows versions</h2>
+        <p class="lead" style="margin-bottom: 28px;">Older builds stay here in case you need to roll back.</p>
+      </div>
+
+      <div class="versions" data-reveal>
+        <div class="version">
+          <span class="version__tag">v0.2.0</span>
+          <span class="version__date">Current</span>
+          <span class="version__note">Latest release — Windows installer via GitHub Releases.</span>
+          <a href="https://github.com/QasimNasir05/Siphon_Windows/releases/download/v0.2.0/Siphon-Setup-0.2.0.exe" class="btn btn--ghost btn--sm">Download</a>
+        </div>
+
+        <div class="version">
+          <span class="version__tag">v1.0.0</span>
+          <span class="version__date">Previous release</span>
+          <span class="version__note">First public release — Windows installer (.zip) via GitHub Releases.</span>
+          <a href="https://github.com/QasimNasir05/Siphon_Windows/releases/download/v1.0.0/Siphon-Setup-v1.0.0.zip" class="btn btn--ghost btn--sm">Download</a>
+        </div>
+
+        <!--
+          Template for adding an older Windows release later — copy this block above the
+          closing </div> of .versions, fill in the tag/date/note, and point href at that
+          release's asset:
+
+          <div class="version">
+            <span class="version__tag">vX.X.X</span>
+            <span class="version__date">Mon YYYY</span>
+            <span class="version__note">Short note on what changed.</span>
+            <a href="#" class="btn btn--ghost btn--sm">Download</a>
+          </div>
+        -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ANDROID: SCREENSHOTS + VERSIONS ============ -->
+  <section class="section section--tight">
+    <div class="wrap">
+      <div data-reveal>
+        <p class="eyebrow">Android</p>
+        <h2>Inside Siphon for Android</h2>
+      </div>
+      <div class="gallery">
+        <div class="shot" data-reveal style="--i:0"><img src="../assets/screenshots/Siphon_apk-1.webp" alt="Siphon Android main download screen"></div>
+        <div class="shot" data-reveal style="--i:1"><img src="../assets/screenshots/Siphon_apk-2.webp" alt="Siphon Android format and quality selector"></div>
+        <div class="shot" data-reveal style="--i:2"><img src="../assets/screenshots/Siphon_apk-3.webp" alt="Siphon Android download history"></div>
+        <div class="shot" data-reveal style="--i:3"><img src="../assets/screenshots/Siphon_apk-4.webp" alt="Siphon Android playlist picker"></div>
+        <div class="shot" data-reveal style="--i:4"><img src="../assets/screenshots/Siphon_apk-5.webp" alt="Siphon Android settings screen"></div>
+        <div class="shot" data-reveal style="--i:5"><img src="../assets/screenshots/Siphon_apk-6.webp" alt="Siphon Android in-progress download"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="versions-android" class="section section--tight">
+    <div class="wrap">
+      <div data-reveal>
+        <p class="eyebrow">Release history</p>
+        <h2>Android versions</h2>
+        <p class="lead" style="margin-bottom: 28px;">Older builds stay here in case you need to roll back.</p>
+      </div>
+
+      <div class="versions" data-reveal>
+        <div class="version">
+          <span class="version__tag">v1.0.0</span>
+          <span class="version__date">Current</span>
+          <span class="version__note">First public release — direct APK via GitHub Releases.</span>
+          <a href="https://github.com/QasimNasir05/Siphon_APK/releases/download/v1.0.0/Siphon.apk" class="btn btn--ghost btn--sm">Download</a>
+        </div>
+
+        <!--
+          Template for adding an older Android release later — copy this block above the
+          closing </div> of .versions, fill in the tag/date/note, and point href at that
+          release's asset:
+
+          <div class="version">
+            <span class="version__tag">vX.X.X</span>
+            <span class="version__date">Mon YYYY</span>
+            <span class="version__note">Short note on what changed.</span>
+            <a href="#" class="btn btn--ghost btn--sm">Download</a>
+          </div>
+        -->
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <span>&copy; <span data-year>2026</span> HiTend Digital. All rights reserved.</span>
+    <a class="footer__mail" href="mailto:contact@hitenddigital.com">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+        <path d="M3 7l9 6 9-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      contact@hitenddigital.com
+    </a>
+  </div>
+</footer>
+
+<script src="../script.js" defer></script>
+</body>
+</html>
